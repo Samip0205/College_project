@@ -1,35 +1,32 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Explore from './pages/Explore';
+import Dashboard from './pages/Dashboard';
+import AddProgress from './pages/AddProgress';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import MyAccount from './pages/MyAccount';
 
-import LandingPage from './components/LandingPage';
-import SignUp from './components/SignUp';
-import Login from './components/Login'; 
-import ProfileDashboard from './components/ProfileDashboard';
-import ProgressPost from './components/ProgressPost';
-import Explore from './components/Explore';
-import FollowPage from './components/FollowPage';
 
-const MainApp = () => {
+function App() {
+  const [searchQuery, setSearchQuery] = useState('');
+
   return (
     <Router>
+      <Navbar setSearchQuery={setSearchQuery} />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/signup" element={<SignUp />} />
-         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<ProfileDashboard />} />
-        <Route path="/add-progress" element={<ProgressPost />} /> 
-        <Route path="/explore" element={<Explore/>} />
-        <Route path="/follow" element={<FollowPage />} />
+        <Route path="/" element={<Home searchQuery={searchQuery} />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/add-progress" element={<AddProgress />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/account" element={<MyAccount />} />
       </Routes>
     </Router>
   );
-};
+}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <MainApp />
-  </React.StrictMode>
-);
- 
 export default App;
