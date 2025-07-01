@@ -19,10 +19,14 @@ const AddProgress = () => {
           className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="">Select Skill</option>
+          <option value="Cooking">Cooking</option>
+          <option value="Guitar">Guitar</option>
           <option value="Coding">Coding</option>
           <option value="Fitness">Fitness</option>
-          <option value="Guitar">Guitar</option>
-          <option value="Cooking">Cooking</option>
+          <option value="Design">Design</option>
+          <option value="Photography">Photography</option>
+          <option value="Music">Music</option>
+
         </select>
 
         <textarea

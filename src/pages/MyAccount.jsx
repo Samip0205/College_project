@@ -11,7 +11,8 @@ const MyAccount = () => {
     age: '',
     birthdate: '',
     contact: '',
-    photo: ''
+    photo: '',
+    password: ''
   });
 
   const [isProfileComplete, setIsProfileComplete] = useState(false);
@@ -86,9 +87,9 @@ const MyAccount = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="max-w-md w-full bg-white shadow-md p-8 rounded-md">
-        <h2 className="text-2xl font-bold text-green-600 text-center mb-2">My Account</h2>
-
-        {/* Profile Image Upload Section */}
+        {!isProfileComplete && (
+          <h2 className="text-xl font-semibold text-center text-green-600 mb-4">Complete Your Profile</h2>
+        )}
         {!isProfileComplete && (
           <div className="flex flex-col items-center mb-4">
             <div className="relative w-24 h-24">
@@ -107,51 +108,35 @@ const MyAccount = () => {
               />
             </div>
             {profile.photo ? (
-  <button
-    type="button"
-    onClick={() => {
-      const updatedProfile = { ...profile, photo: '' };
-      setProfile(updatedProfile);
-      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-    }}
-    className="mt-2 text-sm text-red-500 hover:underline"
-  >
-    Remove Photo
-  </button>
-) : (
-  <label htmlFor="uploadPhoto" className="mt-2 text-sm text-blue-500 hover:underline cursor-pointer">
-  Add Photo
-  <input
-    id="uploadPhoto"
-    type="file"
-    name="photo"
-    accept="image/*"
-    onChange={handleChange}
-    className="hidden"
-  />
-</label>
-)}
+              <button
+                type="button"
+                onClick={() => {
+                  const updatedProfile = { ...profile, photo: '' };
+                  setProfile(updatedProfile);
+                  localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+                }}
+                className="mt-2 text-sm text-red-500 hover:underline"
+              >
+                Remove Photo
+              </button>
+            ) : (
+              <label htmlFor="uploadPhoto" className="mt-2 text-sm text-blue-500 hover:underline cursor-pointer">
+                Add Photo
+                <input
+                  id="uploadPhoto"
+                  type="file"
+                  name="photo"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-  <input
-    type={showPassword ? "text" : "password"}
-    name="password"
-    id="password"
-    placeholder="New Password"
-    onChange={handleChange}
-    className="w-full border px-3 py-2 rounded pr-10"
-  />
-  <span
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute right-3 top-2.5 text-sm text-gray-500 cursor-pointer"
-  >
-    {showPassword ? "Hide" : "Show"}
-  </span>
-</div>
-            <input
+        {!isProfileComplete ? (
+          <form onSubmit={handleSubmit} className="space-y-4">            <input
               type="text"
               name="name"
               value={profile.name}
@@ -175,33 +160,53 @@ const MyAccount = () => {
               required
             />
             <input
-              type="date"
-              name="birthdate"
-              value={profile.birthdate}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <input
-              type="tel"
-              name="contact"
-              value={profile.contact}
-              onChange={handleChange}
-              placeholder="Contact Number"
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
+  type="date"
+  name="birthdate"
+  value={profile.birthdate}
+  onChange={handleChange}
+  className="w-full border px-3 py-2 rounded"
+  required
+/>
+<input
+  type="tel"
+  name="contact"
+  value={profile.contact}
+  onChange={handleChange}
+  placeholder="Contact Number"
+  className="w-full border px-3 py-2 rounded"
+  required
+/>
+            
+<div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    name="password"
+    placeholder="New Password"
+    onChange={handleChange}
+    className="w-full border px-3 py-2 rounded pr-10"
+  />
+  <span
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-2.5 text-sm text-gray-500 cursor-pointer"
+  >
+    {showPassword ? "Hide" : "Show"}
+  </span>
+</div>
             <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
               Save Profile & Continue
             </button>
           </form>
-         
+        ) : (
           <div className="space-y-4 text-center">
+            <div className="flex flex-col items-center mb-4">
+              <img
+                src={profile.photo || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover border-2 border-green-500"
+              />
+            </div>
             <p><strong>Name:</strong> {profile.name}</p>
             <p><strong>Email:</strong> {profile.email}</p>
-            <p><strong>Age:</strong> {profile.age}</p>
-            <p><strong>Birthdate:</strong> {profile.birthdate}</p>
-            <p><strong>Contact:</strong> {profile.contact}</p>
 
             <div className="space-y-2 mt-4">
               <button
@@ -210,14 +215,12 @@ const MyAccount = () => {
               >
                 Edit Profile
               </button>
-
               <button
                 onClick={handleLogout}
                 className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
               >
                 Logout
               </button>
-
               <button
                 onClick={handleDelete}
                 className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
@@ -226,7 +229,7 @@ const MyAccount = () => {
               </button>
             </div>
           </div>
-        
+        )}
       </div>
     </div>
   );
