@@ -99,7 +99,7 @@ const SkillPage = () => {
       <img
         src={content.image}
         alt={skillName}
-        className="w-full h-96 object-cover rounded shadow mb-6"
+        className="w-full h-102 object-cover rounded shadow mb-6"
       />
     
       <div className="mb-8">

@@ -26,6 +26,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/account" element={<MyAccount />} />
        <Route path="/skills/:skillName" element={<SkillPage />} />
+       
       </Routes>
     </Router>
   );

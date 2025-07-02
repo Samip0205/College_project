@@ -67,7 +67,7 @@ const Navbar = ({ setSearchQuery }) => {
         {/* LEFT */}
         <div className="flex items-center space-x-4">
           <div className="text-2xl font-bold text-green-600">
-            <Link to="/">Grow With Me</Link>
+            <Link to="/">🌱Grow With Me</Link>
           </div>
 
           {/* Browse */}

@@ -30,7 +30,6 @@ const Home = ({ searchQuery }) => {
       )
     : allSkills;
 
-  // Redirect ONLY when exactly 1 skill matches (not all)
   useEffect(() => {
     if (
       searchQuery &&
@@ -51,7 +50,6 @@ const Home = ({ searchQuery }) => {
         Track your skills, share your journey, and grow with the community.
       </p>
 
-      {/* Full-screen community image */}
       <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] my-8">
         <img
           src={communityImg}
@@ -60,7 +58,6 @@ const Home = ({ searchQuery }) => {
         />
       </div>
 
-      {/* Show matched cards */}
       {filteredSkills.length === 0 ? (
         <p className="text-red-500 font-medium">
           No skills matched your search. Try another keyword like <strong>“Coding”</strong> or <strong>“Guitar”</strong>.
