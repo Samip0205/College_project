@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -8,7 +9,7 @@ import AddProgress from './pages/AddProgress';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import MyAccount from './pages/MyAccount';
-
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,7 +24,11 @@ function App() {
         <Route path="/add-progress" element={<AddProgress />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/account" element={<MyAccount />} />
+        <Route path="/account" element={
+          <ProtectedRoute>
+            <MyAccount />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
   );

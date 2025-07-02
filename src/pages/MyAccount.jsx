@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 const MyAccount = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -12,224 +14,177 @@ const MyAccount = () => {
     birthdate: '',
     contact: '',
     photo: '',
-    password: ''
   });
 
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
-
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const storedProfile = JSON.parse(localStorage.getItem('userProfile'));
-    const signupUser = JSON.parse(localStorage.getItem('signupUser'));
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (!isLoggedIn) {
-      alert("Please login first.");
-      navigate('/login');
-    } else {
-      setProfile(prev => ({
-        ...prev,
-        name: signupUser?.name || '',
-        email: signupUser?.email || '',
-        ...(storedProfile || {})
-      }));
-      setIsProfileComplete(!!storedProfile);
-    }
+      if (userError || !user) {
+        navigate('/login');
+        return;
+      }
+
+      setUser(user);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.log('Profile fetch error:', error.message);
+      }
+
+      if (data) {
+        setProfile({
+          name: data.name || '',
+          email: data.email ||'',
+          age: data.age || '',
+          birthdate: data.birthdate || '',
+          contact: data.contact || '',
+          photo: data.photo || '',
+        });
+
+        if (!data.name || !data.age || !data.birthdate || !data.contact) {
+          setMessage('⚠️ Please complete your profile.');
+        } else {
+          setMessage('');
+        }
+      }
+
+      setLoading(false);
+    };
+
+    fetchProfile();
   }, [navigate]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'photo' && files && files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updatedProfile = { ...profile, photo: reader.result };
-        setProfile(updatedProfile);
-        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-      };
-      reader.readAsDataURL(files[0]);
-    } else {
-      setProfile({ ...profile, [name]: value });
-    }
+    setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    const fileName = `${user.id}-${file.name}`;
 
-    if (!profile.age || !profile.birthdate || !profile.contact) {
-      alert("Please fill all the fields to complete your profile.");
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError.message);
       return;
     }
 
-    const { name, email, age, birthdate, contact, photo, password } = profile;
-    localStorage.setItem('userProfile', JSON.stringify({ name, email, age, birthdate, contact, photo, password }));
-    setIsProfileComplete(true);
-    alert("Profile completed successfully!");
-    navigate('/');
+    const { data: publicURL } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    setProfile({ ...profile, photo: publicURL.publicUrl });
   };
 
-  const handleLogout = () => {
-    localStorage.setItem('isLoggedIn', 'false');
-    alert("Logged out.");
-    navigate('/');
-    window.location.reload();
+  const handleSave = async () => {
+    if (!user) return;
+
+    const updates = {
+      id: user.id,
+      name: profile.name,
+      email:profile.email,
+      age: profile.age === '' ? null : Number(profile.age),
+      birthdate: profile.birthdate === '' ? null : profile.birthdate,
+      contact: profile.contact,
+      photo: profile.photo,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('profiles').upsert(updates);
+
+    if (error) {
+      alert('❌ Failed to save profile: ' + error.message);
+    } else {
+      alert('✅ Profile updated successfully!');
+      setMessage('');
+    }
   };
 
-  const handleDelete = () => {
-    localStorage.removeItem('signupUser');
-    localStorage.removeItem('userProfile');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('accountCreated');
-    localStorage.removeItem('firstTimeLogin');
-    alert("Account deleted.");
-    navigate('/');
-    window.location.reload();
-  };
+  if (loading) return <div className="text-center mt-8">Loading...</div>;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white shadow-md p-8 rounded-md">
-        {!isProfileComplete && (
-          <h2 className="text-xl font-semibold text-center text-green-600 mb-4">Complete Your Profile</h2>
-        )}
-        {!isProfileComplete && (
-          <div className="flex flex-col items-center mb-4">
-            <div className="relative w-24 h-24">
-              <img
-                src={profile.photo || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover border-2 border-green-500"
-              />
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                onChange={handleChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer rounded-full"
-                title="Upload profile photo"
-              />
-            </div>
-            {profile.photo ? (
-              <button
-                type="button"
-                onClick={() => {
-                  const updatedProfile = { ...profile, photo: '' };
-                  setProfile(updatedProfile);
-                  localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-                }}
-                className="mt-2 text-sm text-red-500 hover:underline"
-              >
-                Remove Photo
-              </button>
-            ) : (
-              <label htmlFor="uploadPhoto" className="mt-2 text-sm text-blue-500 hover:underline cursor-pointer">
-                Add Photo
-                <input
-                  id="uploadPhoto"
-                  type="file"
-                  name="photo"
-                  accept="image/*"
-                  onChange={handleChange}
-                  className="hidden"
-                />
-              </label>
-            )}
-          </div>
-        )}
+    <div className="max-w-xl mx-auto mt-10 p-4 border rounded-xl shadow-md bg-white">
+      <h2 className="text-2xl font-bold mb-4 text-center">My Account</h2>
 
-        {!isProfileComplete ? (
-          <form onSubmit={handleSubmit} className="space-y-4">            <input
-              type="text"
-              name="name"
-              value={profile.name}
-              disabled
-              className="w-full border px-3 py-2 rounded bg-gray-100"
-            />
-            <input
-              type="email"
-              name="email"
-              value={profile.email}
-              disabled
-              className="w-full border px-3 py-2 rounded bg-gray-100"
-            />
-            <input
-              type="number"
-              name="age"
-              value={profile.age}
-              onChange={handleChange}
-              placeholder="Age"
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <input
-  type="date"
-  name="birthdate"
-  value={profile.birthdate}
-  onChange={handleChange}
-  className="w-full border px-3 py-2 rounded"
-  required
-/>
-<input
-  type="tel"
-  name="contact"
-  value={profile.contact}
-  onChange={handleChange}
-  placeholder="Contact Number"
-  className="w-full border px-3 py-2 rounded"
-  required
-/>
-            
-<div className="relative">
-  <input
-    type={showPassword ? "text" : "password"}
-    name="password"
-    placeholder="New Password"
-    onChange={handleChange}
-    className="w-full border px-3 py-2 rounded pr-10"
-  />
-  <span
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute right-3 top-2.5 text-sm text-gray-500 cursor-pointer"
-  >
-    {showPassword ? "Hide" : "Show"}
-  </span>
-</div>
-            <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-              Save Profile & Continue
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-4 text-center">
-            <div className="flex flex-col items-center mb-4">
-              <img
-                src={profile.photo || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover border-2 border-green-500"
-              />
-            </div>
-            <p><strong>Name:</strong> {profile.name}</p>
-            <p><strong>Email:</strong> {profile.email}</p>
+      {message && (
+        <div className="mb-4 p-2 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded">
+          {message}
+        </div>
+      )}
 
-            <div className="space-y-2 mt-4">
-              <button
-                onClick={() => setIsProfileComplete(false)}
-                className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
-              >
-                Edit Profile
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
-              >
-                Logout
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
-        )}
+      {(
+        <div className="flex justify-center mb-4">
+          <img
+            src={profile.photo || '/default-avatar.png'}
+            alt="Profile"
+            className="w-24 h-24 rounded-full object-cover border"
+          />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          className="block w-full"
+        />
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={profile.name}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          type="text"
+          name="email"
+          placeholder="email"
+          value={profile.email}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          type="number"
+          name="age"
+          placeholder="Age"
+          value={profile.age}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          type="date"
+          name="birthdate"
+          value={profile.birthdate}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          type="text"
+          name="contact"
+          placeholder="Contact Number"
+          value={profile.contact}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <button
+          onClick={handleSave}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+        >
+          Save & Continue
+        </button>
       </div>
     </div>
   );
