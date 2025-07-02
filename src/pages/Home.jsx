@@ -1,6 +1,6 @@
-
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
+
 import cookingImg from '../assets/images/cooking.png';
 import guitarImg from '../assets/images/guitar.png';
 import codingImg from '../assets/images/coding.png';
@@ -22,52 +22,25 @@ const skillImages = {
 
 const Home = ({ searchQuery }) => {
   const navigate = useNavigate();
-
   const allSkills = ['Cooking', 'Guitar', 'Coding', 'Fitness', 'Design', 'Photography', 'Music'];
 
-  const normalizedQuery = searchQuery?.toLowerCase().trim() || '';
+  const filteredSkills = searchQuery
+    ? allSkills.filter(skill =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allSkills;
 
-  const matchedSkills =
-    normalizedQuery === '' || normalizedQuery === 'all'
-      ? allSkills
-      : allSkills.filter(skill =>
-          normalizedQuery
-            .split(' ')
-            .some(word => skill.toLowerCase().includes(word))
-        );
-
+  // Redirect ONLY when exactly 1 skill matches (not all)
   useEffect(() => {
     if (
-      normalizedQuery &&
-      normalizedQuery !== 'all' &&
-      matchedSkills.length > 1 &&
-      matchedSkills.length < allSkills.length
+      searchQuery &&
+      filteredSkills.length === 1 &&
+      allSkills.length !== filteredSkills.length
     ) {
-      let index = 0;
-
-      const interval = setInterval(() => {
-        const nextSkill = matchedSkills[index].toLowerCase();
-        navigate(`/skills/${nextSkill}`);
-        index++;
-
-        if (index >= matchedSkills.length) {
-          clearInterval(interval); 
-        }
-      }, 2000); 
-
-      return () => clearInterval(interval); 
-    }
-
-    
-    if (
-      normalizedQuery &&
-      matchedSkills.length === 1 &&
-      matchedSkills.length !== allSkills.length
-    ) {
-      const matchedSkill = matchedSkills[0].toLowerCase();
+      const matchedSkill = filteredSkills[0].toLowerCase();
       navigate(`/skills/${matchedSkill}`);
     }
-  }, [normalizedQuery, matchedSkills, navigate]);
+  }, [filteredSkills, searchQuery, navigate]);
 
   return (
     <div className="p-8 text-center">
@@ -78,6 +51,7 @@ const Home = ({ searchQuery }) => {
         Track your skills, share your journey, and grow with the community.
       </p>
 
+      {/* Full-screen community image */}
       <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] my-8">
         <img
           src={communityImg}
@@ -86,13 +60,14 @@ const Home = ({ searchQuery }) => {
         />
       </div>
 
-      {matchedSkills.length === 0 ? (
+      {/* Show matched cards */}
+      {filteredSkills.length === 0 ? (
         <p className="text-red-500 font-medium">
-          No skills matched your search.
+          No skills matched your search. Try another keyword like <strong>“Coding”</strong> or <strong>“Guitar”</strong>.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {matchedSkills.map(skill => (
+          {filteredSkills.map(skill => (
             <div
               key={skill}
               className="border p-4 rounded shadow hover:shadow-md transition cursor-pointer"
@@ -101,7 +76,7 @@ const Home = ({ searchQuery }) => {
               <img
                 src={skillImages[skill]}
                 alt={skill}
-                className="w-full h-60 object-cover rounded mb-4 transform transition duration-300 hover:scale-105 hover:brightness-110"
+                className="w-full h-40 object-cover rounded mb-4 transform transition duration-300 hover:scale-105 hover:brightness-110"
               />
               <h2 className="text-xl font-semibold text-gray-800">{skill}</h2>
             </div>
