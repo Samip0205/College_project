@@ -1,5 +1,3 @@
-import React from 'react';
-
 import cookingImg from '../assets/images/cooking.png';
 import guitarImg from '../assets/images/guitar.png';
 import codingImg from '../assets/images/coding.png';
