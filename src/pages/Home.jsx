@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import cookingImg from '../assets/images/cooking.png';
 import guitarImg from '../assets/images/guitar.png';
 import codingImg from '../assets/images/coding.png';

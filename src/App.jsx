@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -8,7 +9,6 @@ import AddProgress from './pages/AddProgress';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import MyAccount from './pages/MyAccount';
-import SkillPage from './components/SkillPage';
 
 
 function App() {
@@ -26,7 +26,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/account" element={<MyAccount />} />
-         <Route path="/skills/:skillName" element={<SkillPage />} />
       </Routes>
     </Router>
   );
