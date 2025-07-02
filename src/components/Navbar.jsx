@@ -108,7 +108,17 @@ const Navbar = ({ setSearchQuery }) => {
           </form>
 
           {/* Nav Links */}
-          <Link to="/" className="hover:text-green-600 font-medium">Home</Link>
+          <button
+  onClick={() => {
+    setSearchInput('');
+    setSearchQuery('');
+    navigate('/');
+  }}
+  className="hover:text-green-600 font-medium"
+>
+  Home
+</button>
+
           <Link to="/explore" className="hover:text-green-600 font-medium">Explore</Link>
           <Link to="/dashboard" className="hover:text-green-600 font-medium">Dashboard</Link>
           <Link to="/add-progress" className="hover:text-green-600 font-medium">Add Progress</Link>
@@ -164,7 +174,20 @@ const Navbar = ({ setSearchQuery }) => {
               )}
             </form>
           </li>
-          <li><Link to="/" onClick={toggleMenu} className="block hover:text-green-600">Home</Link></li>
+          <li>
+  <button
+    onClick={() => {
+      setSearchInput('');
+      setSearchQuery('');
+      navigate('/');
+      toggleMenu();
+    }}
+    className="block hover:text-green-600 w-full text-left"
+  >
+    Home
+  </button>
+</li>
+
           <li><Link to="/explore" onClick={toggleMenu} className="block hover:text-green-600">Explore</Link></li>
           <li><Link to="/dashboard" onClick={toggleMenu} className="block hover:text-green-600">Dashboard</Link></li>
           <li><Link to="/add-progress" onClick={toggleMenu} className="block hover:text-green-600">Add Progress</Link></li>

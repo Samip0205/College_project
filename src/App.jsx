@@ -8,10 +8,12 @@ import AddProgress from './pages/AddProgress';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import MyAccount from './pages/MyAccount';
+import SkillPage from './components/SkillPage';
 
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
+
 
   return (
     <Router>
@@ -24,6 +26,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/account" element={<MyAccount />} />
+         <Route path="/skills/:skillName" element={<SkillPage />} />
       </Routes>
     </Router>
   );
