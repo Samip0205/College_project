@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -19,7 +19,7 @@ const MyAccount = () => {
     age: '',
     birthdate: '',
     contact: '',
-    photo: '',
+    photo: ''
   });
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const MyAccount = () => {
         age: data.age || '',
         birthdate: data.birthdate || '',
         contact: data.contact || '',
-        photo: data.photo || '',
+        photo: data.photo || ''
       };
 
       setProfile(profileData);
@@ -101,48 +101,6 @@ const MyAccount = () => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const fileName = `${user.id}-${Date.now()}-${file.name}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, { upsert: true });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError.message);
-      return;
-    }
-
-    const { data: publicURL } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    const imageUrl = `${publicURL.publicUrl}?t=${Date.now()}`;
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ photo: imageUrl, updated_at: new Date().toISOString() })
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Failed to save image to profile:', updateError.message);
-    }
-
-    await fetchProfile();
-  };
-
-  const handleRemovePhoto = async () => {
-    if (!user) return;
-    await supabase
-      .from('profiles')
-      .update({ photo: '', updated_at: new Date().toISOString() })
-      .eq('id', user.id);
-    await fetchProfile();
-  };
-
   const handleSave = async () => {
     if (!user) return;
 
@@ -189,7 +147,6 @@ const MyAccount = () => {
   if (step === 2) {
     return (
       <div className="max-w-md mx-auto mt-10 p-6 border rounded-xl shadow bg-white relative">
-        {/* 3-dot menu */}
         <div className="absolute top-4 right-4" ref={menuRef}>
           <div className="relative">
             <button
@@ -227,14 +184,17 @@ const MyAccount = () => {
         </div>
 
         <h2 className="text-2xl font-bold mb-4 text-green-600">Welcome, {profile.name} 👋</h2>
-        <img
-          src={profile.photo || '/default-avatar.png'}
-          alt="Profile"
-          className="w-24 h-24 mx-auto rounded-full object-cover border-2 border-green-500 mb-4"
-        />
+
+        <div className="flex justify-center mb-4">
+          <img
+            src={profile.photo || '/default-avatar.png'}
+            alt="Profile"
+            className="w-24 h-24 object-cover rounded-full border-2 border-green-500"
+          />
+        </div>
+
         <p className="text-lg mb-1">Email: <strong>{profile.email}</strong></p>
 
-        {/* Followers and Following */}
         <div className="mt-6 grid grid-cols-2 gap-4 text-center">
           <div>
             <button
@@ -268,42 +228,6 @@ const MyAccount = () => {
           {message}
         </div>
       )}
-
-      <div className="flex flex-col items-center mb-4">
-        <img
-          src={profile.photo || '/default-avatar.png'}
-          alt="Profile"
-          className="w-24 h-24 rounded-full object-cover border-2 border-green-500"
-        />
-
-        {!profile.photo ? (
-          <label className="mt-2 text-blue-600 font-medium cursor-pointer">
-            Add Photo
-            <input
-              type="text"
-              onChange={handlePhotoUpload}
-              className=""
-            />
-          </label>
-        ) : (
-          <div className="flex gap-4 mt-2">
-            <label className="text-blue-600 font-medium cursor-pointer">
-              Change Photo
-              <input
-                type="text"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={handleRemovePhoto}
-              className="text-red-600 font-medium hover:underline"
-            >
-              Remove Photo
-            </button>
-          </div>
-        )}
-      </div>
 
       <div className="space-y-4">
         <input
@@ -342,6 +266,14 @@ const MyAccount = () => {
           name="contact"
           placeholder="Contact Number"
           value={profile.contact}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <input
+          type="text"
+          name="photo"
+          placeholder="Profile Photo URL"
+          value={profile.photo}
           onChange={handleChange}
           className="w-full px-3 py-2 border rounded"
         />

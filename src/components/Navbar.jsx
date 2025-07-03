@@ -130,14 +130,7 @@ const Navbar = ({ setSearchQuery }) => {
           {isLoggedIn ? (
             <>
               <Link to="/account" className="hover:text-green-600">My Account</Link>
-              <Link to="/settings" className="hover:text-green-600">Settings</Link>
-              {photo && (
-                <img
-                  src={photo}
-                  alt="DP"
-                  className="w-8 h-8 rounded-full border-2 border-green-500"
-                />
-              )}
+              <Link to="/settings" className="hover:text-green-600 text-black-">⚙️</Link>
             </>
           ) : (
             <>
