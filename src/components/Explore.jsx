@@ -66,7 +66,7 @@ const ExplorePage = () => {
       <Section title="🔥 Trending Journeys" entries={filteredEntries.filter(e => e.type === 'trending')} />
       <Section title="🧑‍🌾 Local Growers" entries={filteredEntries.filter(e => e.type === 'local')} />
       <Section title="🆕 New This Week" entries={filteredEntries.filter(e => e.type === 'new')} />
-
+ 
       {/* ✅ Submit Button */}
       <button onClick={handleSubmit} style={styles.submitBtn}>
         Continue to Follow ➡️

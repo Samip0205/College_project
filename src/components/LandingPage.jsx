@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 const LandingPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
-      {/* Keyframe Animations */}
       <style>{`
         @keyframes fadeSlide {
           from {
@@ -22,7 +21,6 @@ const LandingPage = () => {
         }
       `}</style>
 
-      {/* Header */}
       <header className="flex justify-between items-center px-10 py-5 bg-white shadow-md sticky top-0 z-50">
         <div className="text-xl font-bold text-indigo-600">🌱 Grow With Me</div>
         <nav className="flex gap-6">
@@ -32,7 +30,6 @@ const LandingPage = () => {
         </nav>
       </header>
 
-      {/* Main Content */}
       <main className="text-center py-20 px-4 flex-1 fade-slide">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Grow a Skill. Share Your Journey.</h1>
         <h2 className="text-2xl text-gray-600 mb-10">Pick a Skill to Get Started</h2>
@@ -51,7 +48,6 @@ const LandingPage = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-6 text-center">
         <p className="text-sm mb-2">© {new Date().getFullYear()} Grow With Me. All rights reserved.</p>
         <div className="flex justify-center gap-4 flex-wrap text-sm">
