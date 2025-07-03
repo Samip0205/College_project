@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+
 const Navbar = ({ setSearchQuery }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -109,15 +110,15 @@ const Navbar = ({ setSearchQuery }) => {
 
           {/* Nav Links */}
           <button
-  onClick={() => {
-    setSearchInput('');
-    setSearchQuery('');
-    navigate('/');
-  }}
-  className="hover:text-green-600 font-medium"
->
-  Home
-</button>
+            onClick={() => {
+              setSearchInput('');
+              setSearchQuery('');
+              navigate('/');
+            }}
+            className="hover:text-green-600 font-medium"
+          >
+            Home
+          </button>
 
           <Link to="/explore" className="hover:text-green-600 font-medium">Explore</Link>
           <Link to="/dashboard" className="hover:text-green-600 font-medium">Dashboard</Link>
@@ -129,6 +130,7 @@ const Navbar = ({ setSearchQuery }) => {
           {isLoggedIn ? (
             <>
               <Link to="/account" className="hover:text-green-600">My Account</Link>
+              <Link to="/settings" className="hover:text-green-600">Settings</Link>
               {photo && (
                 <img
                   src={photo}
@@ -174,25 +176,30 @@ const Navbar = ({ setSearchQuery }) => {
               )}
             </form>
           </li>
+
           <li>
-  <button
-    onClick={() => {
-      setSearchInput('');
-      setSearchQuery('');
-      navigate('/');
-      toggleMenu();
-    }}
-    className="block hover:text-green-600 w-full text-left"
-  >
-    Home
-  </button>
-</li>
+            <button
+              onClick={() => {
+                setSearchInput('');
+                setSearchQuery('');
+                navigate('/');
+                toggleMenu();
+              }}
+              className="block hover:text-green-600 w-full text-left"
+            >
+              Home
+            </button>
+          </li>
 
           <li><Link to="/explore" onClick={toggleMenu} className="block hover:text-green-600">Explore</Link></li>
           <li><Link to="/dashboard" onClick={toggleMenu} className="block hover:text-green-600">Dashboard</Link></li>
           <li><Link to="/add-progress" onClick={toggleMenu} className="block hover:text-green-600">Add Progress</Link></li>
+
           {isLoggedIn ? (
-            <li><Link to="/account" onClick={toggleMenu} className="block hover:text-green-600">My Account</Link></li>
+            <>
+              <li><Link to="/account" onClick={toggleMenu} className="block hover:text-green-600">My Account</Link></li>
+              <li><Link to="/settings" onClick={toggleMenu} className="block hover:text-green-600">Settings</Link></li>
+            </>
           ) : (
             <>
               <li><Link to="/login" onClick={toggleMenu} className="block hover:text-green-600">Login</Link></li>

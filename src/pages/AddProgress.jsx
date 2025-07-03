@@ -1,141 +1,152 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
-const AddProgress = () => {
-  const [progress, setProgress] = useState({
-    skill: '',
-    description: '',
-    date: '',
-    attachment: null,
-  });
+const ProgressPost = () => {
+  const [skills, setSkills] = useState(['Coding', 'Guitar', 'Design', 'Cooking', 'Fitness']);
+  const [selectedSkill, setSelectedSkill] = useState('');
+  const [entryType, setEntryType] = useState('text');
+  const [caption, setCaption] = useState('');
+  const [mood, setMood] = useState('');
+  const [media, setMedia] = useState(null);
+  const [userId, setUserId] = useState('');
 
-  const [preview, setPreview] = useState(null);
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) setUserId(data.user.id);
+    };
+    getUser();
+  }, []);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-
-    if (name === 'attachment' && files && files[0]) {
-      const file = files[0];
-      setProgress({ ...progress, attachment: file });
-
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      setProgress({ ...progress, [name]: value });
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!progress.skill || !progress.description || !progress.date) {
-      alert("Please fill all required fields.");
-      return;
+    let mediaUrl = null;
+
+    if (media) {
+      const fileExt = media.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, media);
+
+      if (uploadError) {
+        alert('Upload failed');
+        return;
+      }
+
+      const { data: publicURL } = supabase.storage.from('posts').getPublicUrl(fileName);
+      mediaUrl = publicURL.publicUrl;
     }
 
-    const stored = JSON.parse(localStorage.getItem('progressData')) || [];
-    const newEntry = {
-      ...progress,
-      id: Date.now(),
-      attachment: preview || null,
-    };
+    const { error } = await supabase.from('posts').insert([
+      {
+        user_id: userId,
+        skill: selectedSkill,
+        entry_type: entryType,
+        caption,
+        mood,
+        media_url: mediaUrl,
+      },
+    ]);
 
-    localStorage.setItem('progressData', JSON.stringify([...stored, newEntry]));
-    alert("Progress added successfully!");
-
-    setProgress({
-      skill: '',
-      description: '',
-      date: '',
-      attachment: null,
-    });
-    setPreview(null);
-  };
-
-  const handleClear = () => {
-    setProgress({ skill: '', description: '', date: '', attachment: null });
-    setPreview(null);
+    if (!error) {
+      alert('🎉 Post added successfully!');
+      setCaption('');
+      setMood('');
+      setMedia(null);
+      setSelectedSkill('');
+    } else {
+      alert('⚠️ Error adding post');
+    }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-6">
-      <div className="max-w-2xl w-full bg-white shadow-lg p-8 rounded-lg">
-        <h2 className="text-3xl font-bold text-center text-green-600 mb-6">Add Skill Progress</h2>
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-6">
+        <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">Add Weekly Progress</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <select
-            name="skill"
-            value={progress.skill}
-            onChange={handleChange}
-            className="w-full border px-4 py-2 rounded"
-            required
-          >
-            <option value="">Select Skill</option>
-            <option value="Cooking">Cooking</option>
-            <option value="Guitar">Guitar</option>
-            <option value="Coding">Coding</option>
-            <option value="Fitness">Fitness</option>
-            <option value="Design">Design</option>
-            <option value="Photography">Photography</option>
-            <option value="Music">Music</option>
-          </select>
-
-          <textarea
-            name="description"
-            value={progress.description}
-            onChange={handleChange}
-            placeholder="Describe what you practiced or learned..."
-            rows="4"
-            className="w-full border px-4 py-2 rounded"
-            required
-          />
-
-          <input
-            type="date"
-            name="date"
-            value={progress.date}
-            onChange={handleChange}
-            className="w-full border px-4 py-2 rounded"
-            required
-          />
-
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Skill Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Image (optional):</label>
-            <input
-              type="file"
-              name="attachment"
-              accept="image/*"
-              onChange={handleChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-green-100 file:text-green-700 file:rounded-md"
-            />
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mt-3 w-32 h-32 object-cover border rounded shadow"
-              />
-            )}
+            <label className="block font-semibold mb-1">Skill</label>
+            <select
+              required
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Select a skill</option>
+              {skills.map((skill) => (
+                <option key={skill} value={skill}>
+                  {skill}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="flex gap-4 pt-2">
-            <button
-              type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+          {/* Entry Type */}
+          <div>
+            <label className="block font-semibold mb-1">Entry Type</label>
+            <select
+              value={entryType}
+              onChange={(e) => setEntryType(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              Save Progress
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-black py-2 rounded"
-            >
-              Clear
-            </button>
+              <option value="text">Text</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
           </div>
+
+          {/* Caption */}
+          <div>
+            <label className="block font-semibold mb-1">Caption</label>
+            <textarea
+              required
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Describe your progress..."
+              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              rows={4}
+            />
+          </div>
+
+          {/* Mood */}
+          <div>
+            <label className="block font-semibold mb-1">Mood</label>
+            <input
+              value={mood}
+              onChange={(e) => setMood(e.target.value)}
+              placeholder="E.g., Excited, Struggling, Confident"
+              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          {/* Media Upload */}
+          {entryType !== 'text' && (
+            <div>
+              <label className="block font-semibold mb-1">Upload {entryType}</label>
+              <input
+                type="file"
+                accept={entryType === 'image' ? 'image/*' : 'video/*'}
+                onChange={(e) => setMedia(e.target.files[0])}
+                className="w-full border p-2 rounded-md"
+              />
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 transition"
+          >
+            Post Update
+          </button>
         </form>
       </div>
     </div>
   );
 };
 
-export default AddProgress;
+export default ProgressPost;

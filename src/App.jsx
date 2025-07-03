@@ -10,7 +10,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import MyAccount from './pages/MyAccount';
 import SkillPage from './components/SkillPage';
-
+import Settings from './pages/SettingsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +27,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/account" element={<MyAccount />} />
        <Route path="/skills/:skillName" element={<SkillPage />} />
-       
+       <Route path="/settings" element={<SettingsPage/>} /> 
       </Routes>
     </Router>
   );
