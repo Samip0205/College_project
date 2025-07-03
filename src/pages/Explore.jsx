@@ -106,14 +106,18 @@ const Explore = () => {
 
     return (
       <div key={user.id} className="border rounded-lg p-4 bg-white shadow-md">
-        <img
-          src={user.photo || '/default-avatar.png'}
-          alt={user.name}
-          className="w-full h-36 object-cover rounded"
-        />
-        <h3 className="mt-3 font-bold text-lg">{user.name}</h3>
-        <p className="text-sm text-gray-600">{user.skill || 'No Skill'}</p>
-        <p className="text-xs italic text-gray-500">{user.mood || 'No Mood'}</p>
+        <div className="flex items-center space-x-4">
+          <img
+            src={user.photo || '/default-avatar.png'}
+            alt={user.name}
+            className="w-14 h-14 object-cover rounded-full border border-green-400"
+          />
+          <div>
+            <h3 className="font-bold text-lg">{user.name}</h3>
+            <p className="text-sm text-gray-600">{user.skill || 'No Skill'}</p>
+            <p className="text-xs italic text-gray-500">{user.mood || 'No Mood'}</p>
+          </div>
+        </div>
         <button
           onClick={() => handleFollow(user.id)}
           className={`mt-3 w-full py-1 rounded ${
