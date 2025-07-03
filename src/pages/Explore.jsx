@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 const Explore = () => {
   const [userId, setUserId] = useState(null);
   const [profiles, setProfiles] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
   const [followers, setFollowers] = useState([]);
   const [filters, setFilters] = useState({ skill: '', mood: '', duration: '' });
@@ -58,6 +59,21 @@ const Explore = () => {
     fetchFollowers();
   }, []);
 
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setPosts(data);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
   const handleFollow = async (targetId) => {
     if (!userId || followingIds.includes(targetId)) return;
 
@@ -88,38 +104,56 @@ const Explore = () => {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  const newThisWeek = profiles.filter((p) => new Date(p.created_at) > oneWeekAgo);
-  const trending = profiles.slice(0, 5);
-  const localGrowers = profiles;
-
-  const filteredProfiles = profiles.filter((p) => {
-    const skillMatch = filters.skill ? p.skill?.includes(filters.skill) : true;
-    const moodMatch = filters.mood ? p.mood?.includes(filters.mood) : true;
+  const filteredPosts = posts.filter((post) => {
+    const skillMatch = filters.skill ? post.skill?.includes(filters.skill) : true;
+    const moodMatch = filters.mood ? post.mood?.includes(filters.mood) : true;
     const durationMatch = filters.duration
-      ? new Date(p.created_at) >= new Date(Date.now() - filters.duration * 24 * 60 * 60 * 1000)
+      ? new Date(post.created_at) >= new Date(Date.now() - filters.duration * 24 * 60 * 60 * 1000)
       : true;
     return skillMatch && moodMatch && durationMatch;
   });
 
-  const renderUserCard = (user) => {
-    const isFollowing = followingIds.includes(user.id);
+  const renderPostCard = (post) => {
+    const profile = profiles.find((p) => p.id === post.user_id);
+    if (!profile) return null;
+
+    const isFollowing = followingIds.includes(profile.id);
 
     return (
-      <div key={user.id} className="border rounded-lg p-4 bg-white shadow-md">
+      <div key={post.id} className="border rounded-lg p-4 bg-white shadow-md">
         <div className="flex items-center space-x-4">
           <img
-            src={user.photo || '/default-avatar.png'}
-            alt={user.name}
+            src={profile.photo || '/default-avatar.png'}
+            alt={profile.name}
             className="w-14 h-14 object-cover rounded-full border border-green-400"
           />
           <div>
-            <h3 className="font-bold text-lg">{user.name}</h3>
-            <p className="text-sm text-gray-600">{user.skill || 'No Skill'}</p>
-            <p className="text-xs italic text-gray-500">{user.mood || 'No Mood'}</p>
+            <h3 className="font-bold text-lg">{profile.name}</h3>
+            <p className="text-sm text-gray-600">{post.skill || 'No Skill'}</p>
+            <p className="text-xs italic text-gray-500">{post.mood || 'No Mood'}</p>
           </div>
         </div>
+
+        <div className="mt-4 border-t pt-2 text-sm">
+          <p><strong>📝 Caption:</strong> {post.caption}</p>
+          {post.media_url && post.entry_type === 'image' && (
+            <img
+              src={post.media_url}
+              alt="post"
+              className="mt-2 rounded w-full h-48 object-cover"
+            />
+          )}
+          {post.media_url && post.entry_type === 'video' && (
+            <video
+              src={post.media_url}
+              controls
+              className="mt-2 rounded w-full"
+            />
+          )}
+        </div>
+
         <button
-          onClick={() => handleFollow(user.id)}
+          onClick={() => handleFollow(profile.id)}
           className={`mt-3 w-full py-1 rounded ${
             isFollowing
               ? 'bg-gray-300 text-gray-700'
@@ -138,7 +172,7 @@ const Explore = () => {
 
       <div className="flex flex-wrap gap-4 mb-6">
         <select name="skill" onChange={handleFilterChange} className="p-2 border rounded">
-          <option value="">All Skills</option>
+          <option value="">Select a skill</option>
           <option value="Coding">Coding</option>
           <option value="Design">Design</option>
           <option value="Cooking">Cooking</option>
@@ -149,60 +183,30 @@ const Explore = () => {
         </select>
 
         <select name="mood" onChange={handleFilterChange} className="p-2 border rounded">
-          <option value="">All Moods</option>
+          <option value="">Select mood</option>
           <option value="Motivated">Motivated</option>
           <option value="Chill">Chill</option>
           <option value="Focused">Focused</option>
         </select>
 
         <select name="duration" onChange={handleFilterChange} className="p-2 border rounded">
-          <option value="">Any Duration</option>
-          <option value="7">Last 7 Days</option>
-          <option value="30">Last 30 Days</option>
+          <option value="">Select duration</option>
+          <option value="7">1 week</option>
+          <option value="14">2 weeks </option>
+          <option value="30">1 mo </option>
         </select>
       </div>
 
-      {filters.skill || filters.mood || filters.duration ? (
-        <>
-          <div ref={filterSectionRef} className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">🔍 Filtered Results</h2>
-            {filteredProfiles.length === 0 ? (
-              <p className="text-gray-500">No matches found for selected filters.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProfiles.map(renderUserCard)}
-              </div>
-            )}
+      <div ref={filterSectionRef} className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-2">🔍 Filtered Progress Posts</h2>
+        {filteredPosts.length === 0 ? (
+          <p className="text-gray-500">No matches found for selected filters.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPosts.map(renderPostCard)}
           </div>
-        </>
-      ) : (
-        <>
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">🌿 Local Growers</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {localGrowers.map(renderUserCard)}
-            </div>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">🆕 New This Week</h2>
-            {newThisWeek.length === 0 ? (
-              <p className="text-gray-500">No new users this week.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {newThisWeek.map(renderUserCard)}
-              </div>
-            )}
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">🔥 Trending Journeys</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {trending.map(renderUserCard)}
-            </div>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
