@@ -8,7 +8,6 @@ const AddProgress = () => {
   const [caption, setCaption] = useState('');
   const [mood, setMood] = useState('');
   const [duration, setDuration] = useState('');
-  const [media, setMedia] = useState(null);
   const [mediaUrlInput, setMediaUrlInput] = useState('');
   const [userId, setUserId] = useState('');
 
@@ -23,23 +22,7 @@ const AddProgress = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let mediaUrl = mediaUrlInput || null;
-
-    if (entryType !== 'text' && media && !mediaUrlInput) {
-      const fileExt = media.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, media);
-
-      if (uploadError) {
-        alert('Upload failed');
-        return;
-      }
-
-      const { data: publicURL } = supabase.storage.from('posts').getPublicUrl(fileName);
-      mediaUrl = publicURL.publicUrl;
-    }
+    const mediaUrl = entryType === 'url' ? mediaUrlInput : null;
 
     const { error } = await supabase.from('posts').insert([
       {
@@ -50,19 +33,21 @@ const AddProgress = () => {
         mood,
         duration,
         media_url: mediaUrl,
+        is_public: true, // 👈 Explore માટે જરૂરી છે
       },
     ]);
 
     if (!error) {
-      alert('🎉 Post added successfully!');
+      alert('🎉 Progress posted!');
       setCaption('');
       setMood('');
-      setMedia(null);
       setMediaUrlInput('');
       setSelectedSkill('');
       setDuration('');
+      setEntryType('text');
     } else {
       alert('⚠️ Error adding post');
+      console.error(error);
     }
   };
 
@@ -72,6 +57,7 @@ const AddProgress = () => {
         <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">Add Weekly Progress</h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Skill */}
           <div>
             <label className="block font-semibold mb-1">Skill</label>
             <select
@@ -87,6 +73,7 @@ const AddProgress = () => {
             </select>
           </div>
 
+          {/* Mood */}
           <div>
             <label className="block font-semibold mb-1">Mood</label>
             <select
@@ -101,6 +88,7 @@ const AddProgress = () => {
             </select>
           </div>
 
+          {/* Duration */}
           <div>
             <label className="block font-semibold mb-1">Duration</label>
             <select
@@ -115,6 +103,7 @@ const AddProgress = () => {
             </select>
           </div>
 
+          {/* Entry Type */}
           <div>
             <label className="block font-semibold mb-1">Entry Type</label>
             <select
@@ -123,12 +112,11 @@ const AddProgress = () => {
               className="w-full border border-gray-300 p-2 rounded-md"
             >
               <option value="text">Text</option>
-              <option value="image">Image (via Upload)</option>
-              <option value="video">Video (via Upload)</option>
               <option value="url">Image/Video (via URL)</option>
             </select>
           </div>
 
+          {/* Caption */}
           <div>
             <label className="block font-semibold mb-1">Caption</label>
             <textarea
@@ -141,6 +129,7 @@ const AddProgress = () => {
             />
           </div>
 
+          {/* Media URL input */}
           {entryType === 'url' && (
             <div>
               <label className="block font-semibold mb-1">Media URL</label>
@@ -151,21 +140,19 @@ const AddProgress = () => {
                 className="w-full border p-2 rounded-md"
                 placeholder="Paste image or video URL here"
               />
+              {mediaUrlInput && (
+                <div className="mt-2">
+                  {mediaUrlInput.includes('.mp4') ? (
+                    <video src={mediaUrlInput} controls className="w-full rounded" />
+                  ) : (
+                    <img src={mediaUrlInput} alt="Preview" className="w-full rounded" />
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {entryType !== 'text' && entryType !== 'url' && (
-            <div>
-              <label className="block font-semibold mb-1">Upload {entryType}</label>
-              <input
-                type="file"
-                accept={entryType === 'image' ? 'image/*' : 'video/*'}
-                onChange={(e) => setMedia(e.target.files[0])}
-                className="w-full border p-2 rounded-md"
-              />
-            </div>
-          )}
-
+          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700"

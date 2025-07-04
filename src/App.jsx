@@ -12,6 +12,7 @@ import MyAccount from './pages/MyAccount';
 import SkillPage from './components/SkillPage';
 import Settings from './pages/SettingsPage';
 import SettingsPage from './pages/SettingsPage';
+import MyPosts from './pages/MyPosts';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +29,7 @@ function App() {
         <Route path="/account" element={<MyAccount />} />
        <Route path="/skills/:skillName" element={<SkillPage />} />
        <Route path="/settings" element={<SettingsPage/>} /> 
+       <Route path="/myposts" element={<MyPosts />} />
       </Routes>
     </Router>
   );
