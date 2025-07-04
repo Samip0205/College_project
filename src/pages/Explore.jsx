@@ -16,21 +16,24 @@ const Explore = () => {
 
   const getDurationDate = () => {
     const now = new Date(); 
-    if (filters.duration) {
-      now.setDate(now.getDate() - parseInt(filters.duration));
-    }
+    now.setDate(now.getDate() - parseInt(filters.duration));
     return now.toISOString();
   };
 
   const fetchFilteredPosts = async () => {
+    // Fetch only if all 3 filters are selected
+    if (!filters.skill || !filters.mood || !filters.duration) {
+      setPosts([]); // Clear posts if not all filters are selected
+      return;
+    }
+
     let query = supabase
       .from('posts')
       .select('*, profiles(name, photo)')
-      .eq('is_public', true);
-
-    if (filters.skill) query = query.eq('skill', filters.skill);
-    if (filters.mood) query = query.eq('mood', filters.mood);
-    if (filters.duration) query = query.gte('created_at', getDurationDate());
+      .eq('is_public', true)
+      .eq('skill', filters.skill)
+      .eq('mood', filters.mood)
+      .gte('created_at', getDurationDate());
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
@@ -79,15 +82,17 @@ const Explore = () => {
           className="border px-4 py-2 rounded"
         >
           <option value="">Select Duration</option>
-          {durations.map((duration) => (
-            <option key={duration} value={duration}>{duration} Days</option>
-          ))}
+          <option value="7">1 week</option>
+          <option value="14">2 weeks</option>
+          <option value="30">1 month</option>
         </select>
       </div>
 
       {/* Posts Grid */}
-      {posts.length === 0 ? (
-        <p className="text-center text-gray-600">No posts found matching filters.</p>
+      {(!filters.skill || !filters.mood || !filters.duration) ? (
+        <p className="text-center text-gray-600">Please select all filters to view posts.</p>
+      ) : posts.length === 0 ? (
+        <p className="text-center text-gray-600">No posts found matching all filters.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {posts.map((post) => (

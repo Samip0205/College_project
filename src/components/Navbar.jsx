@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { supabase } from '../supabaseClient';
 
 const Navbar = ({ setSearchQuery }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,23 +43,33 @@ const Navbar = ({ setSearchQuery }) => {
   ];
 
   useEffect(() => {
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loggedIn);
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
 
-    const storedProfile = JSON.parse(localStorage.getItem('userProfile'));
-    if (storedProfile?.photo) {
-      setPhoto(storedProfile.photo);
-    }
-  }, []);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('photo')
+          .eq('id', session.user.id)
+          .single();
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
+        if (profile?.photo) {
+          setPhoto(profile.photo);
+        }
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+      if (!session) {
+        setPhoto('');
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   return (
@@ -80,7 +90,11 @@ const Navbar = ({ setSearchQuery }) => {
             {showDropdown && (
               <ul className="absolute left-0 mt-2 w-44 bg-white border rounded shadow-md z-10">
                 {skills.map((skill) => (
-                  <li key={skill} onClick={() => handleSkillClick(skill)} className={`px-4 py-2 hover:bg-green-100 cursor-pointer ${skill === 'None' ? 'text-red-500 font-medium' : ''}`}>
+                  <li
+                    key={skill}
+                    onClick={() => handleSkillClick(skill)}
+                    className={`px-4 py-2 hover:bg-green-100 cursor-pointer ${skill === 'None' ? 'text-red-500 font-medium' : ''}`}
+                  >
                     {skill === 'None' ? 'None (Show All)' : skill}
                   </li>
                 ))}
@@ -119,7 +133,6 @@ const Navbar = ({ setSearchQuery }) => {
           >
             Home
           </button>
-
           <Link to="/explore" className="hover:text-green-600 font-medium">Explore</Link>
           <Link to="/dashboard" className="hover:text-green-600 font-medium">Dashboard</Link>
           <Link to="/add-progress" className="hover:text-green-600 font-medium">Add Progress</Link>
@@ -129,8 +142,11 @@ const Navbar = ({ setSearchQuery }) => {
         <div className="hidden md:flex items-center space-x-4 text-gray-700 font-medium">
           {isLoggedIn ? (
             <>
+              {photo && (
+                <img src={photo} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
+              )}
               <Link to="/account" className="hover:text-green-600">My Account</Link>
-              <Link to="/settings" className="hover:text-green-600 text-black-">⚙️</Link>
+              <Link to="/settings" className="hover:text-green-600">⚙️</Link>
             </>
           ) : (
             <>
@@ -183,7 +199,6 @@ const Navbar = ({ setSearchQuery }) => {
               Home
             </button>
           </li>
-
           <li><Link to="/explore" onClick={toggleMenu} className="block hover:text-green-600">Explore</Link></li>
           <li><Link to="/dashboard" onClick={toggleMenu} className="block hover:text-green-600">Dashboard</Link></li>
           <li><Link to="/add-progress" onClick={toggleMenu} className="block hover:text-green-600">Add Progress</Link></li>
